@@ -2,22 +2,24 @@ import * as SQLite from 'expo-sqlite';
 import { Produto } from './types/Produto';
 
 export const criaBD = async () => {
-
   const bd = await SQLite.openDatabaseAsync('meubanco');
 
-  bd.execAsync(`
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS produtos
-    (id INTEGER PRIMARY KEY NOT NULL, nome TEXT NOT NULL, preco REAL NOT NULL);
-    INSERT INTO produtos (nome, preco) VALUES ('arroz', 19.30)
-    INSERT INTO produtos (nome, preco) VALUES ('kin', 14.30)
-    INSERT INTO produtos (nome, preco) VALUES ('feijas', 12.30)
-    `);
-    
-  const primeiroProduto = await bd.getFirstAsync('SELECT * FROM produtos');  
+  try {
+    await bd.execAsync(`
+      PRAGMA journal_mode = WAL;
 
-  bd.closeAsync();
-}
+      CREATE TABLE IF NOT EXISTS produtos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL,
+        preco REAL NOT NULL
+      );
+    `);
+  } catch (error) {
+    console.log('ERRO AO CRIAR BD:', error);
+  } finally {
+    await bd.closeAsync();
+  }
+};
 
 //GET
 export const listarProdutos = async () => {
