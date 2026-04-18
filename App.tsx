@@ -25,13 +25,21 @@ export default function App() {
   }, []);
 
   const init = async () => {
-    await criaBD();
-    await carregarProdutos();
+    try {
+      await criaBD();
+      await carregarProdutos();
+    } catch (error) {
+      console.log('ERRO INIT:', error);
+    }
   };
 
   const carregarProdutos = async () => {
-    const dados = await listarProdutos();
-    setProdutos(dados);
+    try {
+      const dados = await listarProdutos();
+      setProdutos(dados || []);
+    } catch (error) {
+      console.log('ERRO LISTAR:', error);
+    }
   };
 
   const handleEditar = (produto: Produto) => {
@@ -87,18 +95,17 @@ export default function App() {
           onChangeText={setPrecoProduto}
         />
 
-        <TouchableOpacity style={styles.botao} onPress={handleSalvar}>
+        
+      </View>
+<TouchableOpacity style={styles.botao} onPress={handleSalvar}>
           <Text style={{ color: 'white' }}>
             {editandoId !== null ? 'Atualizar' : 'Adicionar'}
           </Text>
         </TouchableOpacity>
-      </View>
-
       {/* LISTA */}
       {produtos.length > 0 && (
         <FlashList
           data={produtos}
-          estimatedItemSize={80}
           keyExtractor={(item) => item.id!.toString()}
           renderItem={({ item }: { item: Produto }) => (
             <View style={styles.item}>
