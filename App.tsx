@@ -2,6 +2,8 @@ import { FlashList } from '@shopify/flash-list';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import React from 'react';
+
 import { Produto } from './types/Produto';
 
 import {
@@ -11,7 +13,6 @@ import {
   deleteProduto,
   updateProduto
 } from './apiLocal';
-import React = require('react');
 
 export default function App() {
   const [editandoId, setEditandoId] = useState<number | null>(null);
@@ -28,49 +29,34 @@ export default function App() {
     await carregarProdutos();
   };
 
+  const carregarProdutos = async () => {
+    const dados = await listarProdutos();
+    setProdutos(dados);
+  };
+
   const handleEditar = (produto: Produto) => {
     setNomeProduto(produto.nome);
     setPrecoProduto(produto.preco.toString());
     setEditandoId(produto.id!);
   };
 
-  const carregarProdutos = async () => {
-    const dados = await listarProdutos();
-    setProdutos(dados);
-  };
-
-  const handlepostarProdutos = async () => {
-    await postarProdutos({
-      nome: nomeProduto,
-      preco: Number(precoProduto)
-    });
-
-    await carregarProdutos();
-
-    setNomeProduto('');
-    setPrecoProduto('');
-  };
-
   const handleSalvar = async () => {
     if (!nomeProduto || !precoProduto) return;
-  
+
     if (editandoId !== null) {
-      // UPDATE
       await updateProduto(editandoId, {
         nome: nomeProduto,
         preco: Number(precoProduto)
       });
     } else {
-      // INSERT
       await postarProdutos({
         nome: nomeProduto,
         preco: Number(precoProduto)
       });
     }
-  
+
     await carregarProdutos();
-  
-    // reset
+
     setNomeProduto('');
     setPrecoProduto('');
     setEditandoId(null);
@@ -83,6 +69,8 @@ export default function App() {
 
   return (
     <View style={styles.container}>
+
+      {/* FORM */}
       <View style={styles.linha}>
         <TextInput
           style={styles.input}
@@ -99,28 +87,30 @@ export default function App() {
           onChangeText={setPrecoProduto}
         />
 
-<TouchableOpacity style={styles.botao} onPress={handleSalvar}>
-  <Text style={{ color: 'white' }}>
-    {editandoId !== null ? 'Atualizar' : 'Adicionar'}
-  </Text>
-</TouchableOpacity>
+        <TouchableOpacity style={styles.botao} onPress={handleSalvar}>
+          <Text style={{ color: 'white' }}>
+            {editandoId !== null ? 'Atualizar' : 'Adicionar'}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
-      {produtos.length > 0 &&
+      {/* LISTA */}
+      {produtos.length > 0 && (
         <FlashList
           data={produtos}
           estimatedItemSize={80}
           keyExtractor={(item) => item.id!.toString()}
-          renderItem={({ item }) =>
+          renderItem={({ item }: { item: Produto }) => (
             <View style={styles.item}>
-              <Text>{item.nome} - R${item.preco}</Text>
+              <Text>{item.nome} - R${item.preco.toFixed(2)}</Text>
 
-              <TouchableOpacity
-  style={styles.btnEditar}
-  onPress={() => handleEditar(item)}
->
-  <MaterialIcons name="edit-square" size={22} />
-</TouchableOpacity>
-              
+              <View style={styles.linha}>
+                <TouchableOpacity
+                  style={styles.btnEditar}
+                  onPress={() => handleEditar(item)}
+                >
+                  <MaterialIcons name="edit-square" size={22} />
+                </TouchableOpacity>
 
                 <TouchableOpacity
                   style={styles.btnRemover}
@@ -130,11 +120,51 @@ export default function App() {
                 </TouchableOpacity>
               </View>
             </View>
-          }
+          )}
         />
-      }
+      )}
 
-      {produtos.length === 0 && <Text>Sem produtos cadastrados!</Text>}
+      {produtos.length === 0 && (
+        <Text>Sem produtos cadastrados!</Text>
+      )}
+
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    marginTop: 40
+  },
+  linha: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    padding: 8,
+    flex: 1,
+    borderRadius: 5
+  },
+  botao: {
+    backgroundColor: '#007bff',
+    padding: 10,
+    borderRadius: 5
+  },
+  item: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderColor: '#ddd',
+    marginTop: 10
+  },
+  btnEditar: {
+    marginRight: 10
+  },
+  btnRemover: {
+    marginLeft: 5
+  }
+});
